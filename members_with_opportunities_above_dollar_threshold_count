@@ -1,0 +1,28 @@
+--MySQL
+--Count number of members with a savings opportunity greater than a specified dollar amount w/o any contact info (phone/email)
+
+select count(distinct employee_id)
+FROM (
+  SELECT 
+	r.employee_id,
+  r.member_monthly_savings_opportunity,
+  r.purpose_code,
+  r.status_code_id,
+  period,
+  eligibility_file_email,
+  eligibility_file_sms_number,
+  eligibility_file_phone_number,
+  eligibility_file_work_phone_number,
+  eligibility_file_work_email,
+  eligibility_file_personal_email,
+  address1
+  FROM amzn.saverx_savings_opportunity_analysis_recommendation r
+  JOIN amzn.saverx_employee e
+    ON r.employee_id = e.id) as base
+    WHERE purpose_code = 0
+      and status_code_id = 1
+      -- Adjust threshold as desired
+      and member_monthly_savings_opportunity >= 0.01
+      and period = '2024-12-01'
+      -- Keep/delete as desired to check w/ or w/o contact info
+      and eligibility_file_email = "" and eligibility_file_sms_number = "" and eligibility_file_phone_number = "" and eligibility_file_work_phone_number = "" and eligibility_file_work_email = "" and eligibility_file_personal_email = ""
