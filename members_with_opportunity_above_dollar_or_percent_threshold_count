@@ -1,0 +1,46 @@
+--MySQL
+--Counts # of members who either have a savings opportunity above a $ threshold or above a % threshold, w/ or w/o contact info
+
+select count(distinct employee_id) from (
+select 
+ employee_id,
+ original_drug_name,
+ original_mbr_deductible_cost,
+ original_mbr_copay_cost,
+ member_monthly_savings_opportunity,
+ percent_savings,
+ CASE
+   --adjust $ threshold as desired
+	WHEN member_monthly_savings_opportunity >= 5 then TRUE
+   --adjust % threshold as desired
+	WHEN percent_savings >= 50 then TRUE
+	else FALSE END AS include,
+    eligibility_file_email,
+    eligibility_file_sms_number,
+    eligibility_file_phone_number,
+    eligibility_file_work_phone_number,
+    eligibility_file_work_email,
+    eligibility_file_personal_email,
+    address1
+from (
+select
+	r.employee_id,
+    original_drug_name,
+    original_mbr_deductible_cost,
+    original_mbr_copay_cost,
+    member_monthly_savings_opportunity,
+	(((r.member_monthly_savings_opportunity)/r.original_mbr_deductible_cost)*100) as percent_savings,
+    1 AS include,
+    eligibility_file_email,
+    eligibility_file_sms_number,
+    eligibility_file_phone_number,
+    eligibility_file_work_phone_number,
+    eligibility_file_work_email,
+    eligibility_file_personal_email,
+    address1
+from amzn.saverx_savings_opportunity_analysis_recommendation r
+join amzn.saverx_employee em on r.employee_id = em.id
+where purpose_code = 0 and status_code_id = 1 and period = '2024-12-01'
+--keep delete as desired to check w/ or w/o contact info
+and eligibility_file_email = "" and eligibility_file_sms_number = "" and eligibility_file_phone_number = "" and eligibility_file_work_phone_number = "" and eligibility_file_work_email = "" and eligibility_file_personal_email = ""
+) as base ) as temp where include = 1
